@@ -67,14 +67,20 @@ require_once 'includes/header.php';
             <div class="quick-actions">
                 <h3>Acciones Rápidas</h3>
                 <div class="actions-grid">
+                    <?php if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'admin'): ?>
                     <a href="productos.php?action=add" class="action-btn">
                         <span class="action-icon">➕</span>
                         <span>Agregar Producto</span>
                     </a>
+                    <?php endif; ?>
+
+                    <?php if (isset($_SESSION['rol']) && $_SESSION['rol'] === 'admin'): ?>
                     <a href="entradas.php" class="action-btn">
                         <span class="action-icon">📥</span>
                         <span>Nuevo Ingreso</span>
                     </a>
+                    <?php endif; ?>
+
                     <a href="salidas.php" class="action-btn">
                         <span class="action-icon">📤</span>
                         <span>Nueva Venta</span>
