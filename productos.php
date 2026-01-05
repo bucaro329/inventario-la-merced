@@ -8,6 +8,17 @@ $conn = getConnection();
 $mensaje = '';
 $tipo_mensaje = '';
 
+// Obtener o crear categoría "souvenirs"
+$categoria_souvenirs = $conn->query("SELECT id FROM categorias WHERE nombre = 'souvenirs' AND activo = 1 LIMIT 1");
+if ($categoria_souvenirs->num_rows == 0) {
+    // Crear categoría souvenirs si no existe
+    $stmt = $conn->prepare("INSERT INTO categorias (nombre, descripcion) VALUES ('souvenirs', 'Categoría para productos souvenirs')");
+    $stmt->execute();
+    $stmt->close();
+    $categoria_souvenirs = $conn->query("SELECT id FROM categorias WHERE nombre = 'souvenirs' AND activo = 1 LIMIT 1");
+}
+$souvenirs_id = $categoria_souvenirs->fetch_assoc()['id'];
+
 // Procesar acciones
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action'])) {
@@ -17,9 +28,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $nombre = trim($_POST['nombre']);
                 $descripcion = trim($_POST['descripcion'] ?? '');
                 $precio = floatval($_POST['precio']);
+                
+                // Validar que el precio sea mayor a 0
+                if ($precio <= 0) {
+                    $mensaje = "El precio debe ser mayor a 0";
+                    $tipo_mensaje = "error";
+                    break;
+                }
+                
                 $stock = intval($_POST['stock']);
                 $unidad_medida = trim($_POST['unidad_medida']);
-                $categoria_id = !empty($_POST['categoria_id']) ? intval($_POST['categoria_id']) : null;
+                // Asignar automáticamente la categoría souvenirs
+                $categoria_id = $souvenirs_id;
                 $estado = trim($_POST['estado']);
                 
                 $stmt = $conn->prepare("INSERT INTO productos (codigo, nombre, descripcion, precio, stock, unidad_medida, categoria_id, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -41,9 +61,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $nombre = trim($_POST['nombre']);
                 $descripcion = trim($_POST['descripcion'] ?? '');
                 $precio = floatval($_POST['precio']);
+                
+                // Validar que el precio sea mayor a 0
+                if ($precio <= 0) {
+                    $mensaje = "El precio debe ser mayor a 0";
+                    $tipo_mensaje = "error";
+                    break;
+                }
+                
                 $stock = intval($_POST['stock']);
                 $unidad_medida = trim($_POST['unidad_medida']);
-                $categoria_id = !empty($_POST['categoria_id']) ? intval($_POST['categoria_id']) : null;
+                // Mantener la categoría souvenirs en edición también
+                $categoria_id = $souvenirs_id;
                 $estado = trim($_POST['estado']);
                 
                 $stmt = $conn->prepare("UPDATE productos SET codigo=?, nombre=?, descripcion=?, precio=?, stock=?, unidad_medida=?, categoria_id=?, estado=? WHERE id=?");
@@ -76,9 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 }
-
-// Obtener categorías
-$categorias = $conn->query("SELECT * FROM categorias WHERE activo = 1 ORDER BY nombre");
 
 // Obtener productos (activos e inactivos)
 $filtro_estado = $_GET['estado'] ?? 'activo';
@@ -151,8 +177,10 @@ require_once 'includes/header.php';
                     <div class="form-row">
                         <div class="form-group">
                             <label for="precio">Precio *</label>
-                            <input type="number" id="precio" name="precio" step="0.01" min="0" required 
-                                   value="<?php echo $producto_editar ? $producto_editar['precio'] : ''; ?>">
+                            <input type="number" id="precio" name="precio" step="0.01" min="0.01" required 
+                                   value="<?php echo $producto_editar ? $producto_editar['precio'] : ''; ?>"
+                                   placeholder="0.00">
+                            <small style="color: var(--text-secondary); font-size: 0.85em;">El precio es obligatorio y debe ser mayor a 0</small>
                         </div>
                         
                         <div class="form-group">
@@ -176,15 +204,9 @@ require_once 'includes/header.php';
                     <div class="form-row">
                         <div class="form-group">
                             <label for="categoria_id">Categoría</label>
-                            <select id="categoria_id" name="categoria_id">
-                                <option value="">Sin categoría</option>
-                                <?php while ($cat = $categorias->fetch_assoc()): ?>
-                                    <option value="<?php echo $cat['id']; ?>" 
-                                            <?php echo ($producto_editar && $producto_editar['categoria_id'] == $cat['id']) ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($cat['nombre']); ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
+                            <input type="text" id="categoria_id" value="Souvenirs" disabled style="background: #f1f5f9; cursor: not-allowed;">
+                            <input type="hidden" name="categoria_id" value="<?php echo $souvenirs_id; ?>">
+                            <small style="color: var(--text-secondary); font-size: 0.85em;">La categoría está fijada en "Souvenirs"</small>
                         </div>
                         
                         <div class="form-group">
@@ -231,7 +253,6 @@ require_once 'includes/header.php';
                     </thead>
                     <tbody>
                         <?php 
-                        $categorias->data_seek(0); // Resetear el puntero
                         if ($productos->num_rows > 0): 
                         ?>
                             <?php while ($producto = $productos->fetch_assoc()): ?>

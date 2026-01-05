@@ -4,6 +4,9 @@ require_once dirname(__DIR__) . '/config/database.php';
 require_once dirname(__DIR__) . '/config/auth.php';
 requireLogin();
 
+// Asegurar que las rutas de CSS funcionen correctamente
+$base_path = dirname(__DIR__);
+
 $conn = getConnection();
 $mensaje = '';
 $tipo_mensaje = '';
@@ -86,8 +89,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['archivo_excel'])) {
 // Obtener categorías para el ejemplo
 $categorias = $conn->query("SELECT * FROM categorias WHERE activo = 1 ORDER BY nombre");
 
+// Corregir rutas para CSS e imágenes desde la subcarpeta imports/
+$base_url = '../';
 require_once dirname(__DIR__) . '/includes/header.php';
 ?>
+<style>
+    /* Asegurar que las rutas funcionen desde imports/ */
+    .sidebar-header img,
+    .logo_menu {
+        content: url('../img/logo_menu.png');
+    }
+</style>
             <div class="page-header">
                 <h2>📥 Importar Productos desde Excel/CSV</h2>
             </div>

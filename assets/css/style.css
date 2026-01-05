@@ -535,6 +535,16 @@ body {
     margin-bottom: 30px;
     overflow-x: auto;
     border: 1px solid var(--border-color);
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
 }
 
 .table-container h3 {
@@ -548,6 +558,7 @@ body {
     width: 100%;
     border-collapse: collapse;
     margin-top: 10px;
+    min-width: 600px;
 }
 
 .data-table thead {
@@ -694,9 +705,30 @@ footer {
 }
 
 /* Responsive */
+/* Tablet */
+@media (max-width: 1024px) {
+    .content-area {
+        padding: 20px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
+        width: 280px;
     }
     
     .sidebar.open {
@@ -711,30 +743,223 @@ footer {
         display: block;
     }
     
+    .top-bar {
+        padding: 12px 15px;
+    }
+    
+    .top-bar-title {
+        font-size: 1.2em;
+    }
+    
     .content-area {
         padding: 15px;
     }
     
     .stats-grid {
         grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .stat-card {
+        padding: 20px;
+    }
+    
+    .stat-icon {
+        font-size: 2.5em;
+    }
+    
+    .stat-info h3 {
+        font-size: 1.8em;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .action-btn {
+        padding: 25px 15px;
     }
     
     .page-header {
         flex-direction: column;
         align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5em;
+    }
+    
+    .form-container {
+        padding: 20px;
     }
     
     .form-row {
         grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 10px 12px;
+        font-size: 0.95em;
+    }
+    
+    .table-container {
+        padding: 15px;
+        overflow-x: auto;
     }
     
     .data-table {
-        font-size: 0.85em;
+        font-size: 0.8em;
+    }
+    
+    .table-container {
+        -webkit-overflow-scrolling: touch;
     }
     
     .data-table th,
     .data-table td {
         padding: 10px 8px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.9em;
+    }
+    
+    .welcome-section {
+        padding: 25px 15px;
+    }
+    
+    .welcome-section h2 {
+        font-size: 1.5em;
+    }
+    
+    .add-product-section {
+        padding: 20px;
+    }
+    
+    .productos-lista {
+        margin-top: 20px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+    .content-area {
+        padding: 10px;
+    }
+    
+    .top-bar {
+        padding: 10px 12px;
+    }
+    
+    .top-bar-title {
+        font-size: 1.1em;
+    }
+    
+    .form-container {
+        padding: 15px;
+    }
+    
+    .table-container {
+        padding: 10px;
+    }
+    
+    .data-table {
+        font-size: 0.75em;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 8px 6px;
+    }
+    
+    .stat-card {
+        padding: 15px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .stat-icon {
+        font-size: 2em;
+    }
+    
+    .stat-info h3 {
+        font-size: 1.5em;
+    }
+    
+    .wizard-container {
+        padding: 20px 15px;
+    }
+    
+    .wizard-header h2 {
+        font-size: 1.5em;
+    }
+    
+    .wizard-steps {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .wizard-step {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .search-box-container {
+        padding: 20px 15px;
+    }
+    
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .product-card {
+        padding: 15px;
+    }
+    
+    .selected-products-container {
+        padding: 20px 15px;
+    }
+    
+    .selected-product-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .selected-product-info {
+        width: 100%;
+    }
+    
+    .form-actions-fixed {
+        padding: 15px;
+        flex-direction: column;
+    }
+    
+    .form-actions-fixed .btn {
+        width: 100%;
+    }
+    
+    .summary-panel {
+        padding: 20px;
+    }
+    
+    .summary-value {
+        font-size: 36px;
     }
 }
 
