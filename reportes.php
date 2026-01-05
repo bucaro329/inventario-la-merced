@@ -328,62 +328,156 @@ require_once 'includes/header.php';
 <?php require_once 'includes/footer.php'; ?>
 <script>
 function imprimirReporte() {
-    // Ocultar elementos que no se deben imprimir
-    const elementosOcultar = document.querySelectorAll('.form-container, .stats-grid, .page-header, .form-actions, .sidebar, .top-bar');
-    elementosOcultar.forEach(el => {
-        if (el) el.style.display = 'none';
-    });
+    // Crear una ventana nueva para imprimir
+    const contenido = document.getElementById('reporte-imprimible').innerHTML;
+    const titulo = document.querySelector('.page-header h2')?.textContent || 'Reporte - La Merced';
+    const fecha = new Date().toLocaleString('es-GT');
     
-    // Imprimir
-    window.print();
+    const ventanaImpresion = window.open('', '_blank');
+    ventanaImpresion.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>${titulo}</title>
+            <style>
+                @page {
+                    margin: 1.5cm;
+                }
+                
+                body {
+                    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    font-size: 12px;
+                    color: #333;
+                    margin: 0;
+                    padding: 20px;
+                }
+                
+                .header-print {
+                    text-align: center;
+                    margin-bottom: 30px;
+                    border-bottom: 2px solid #960f1c;
+                    padding-bottom: 15px;
+                }
+                
+                .header-print h1 {
+                    color: #960f1c;
+                    margin: 0 0 10px 0;
+                    font-size: 24px;
+                }
+                
+                .header-print p {
+                    margin: 5px 0;
+                    color: #666;
+                    font-size: 14px;
+                }
+                
+                .table-container {
+                    margin-bottom: 30px;
+                    page-break-inside: avoid;
+                }
+                
+                .table-container h3 {
+                    color: #960f1c;
+                    margin-bottom: 15px;
+                    font-size: 18px;
+                    border-bottom: 1px solid #e0e0e0;
+                    padding-bottom: 8px;
+                }
+                
+                .data-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                    font-size: 11px;
+                }
+                
+                .data-table th {
+                    background: #960f1c;
+                    color: white;
+                    padding: 10px 8px;
+                    text-align: left;
+                    font-weight: 600;
+                    border: 1px solid #7a0c16;
+                }
+                
+                .data-table td {
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-top: none;
+                }
+                
+                .data-table tbody tr:nth-child(even) {
+                    background: #f8f9fa;
+                }
+                
+                .data-table tbody tr:hover {
+                    background: #e9ecef;
+                }
+                
+                .stock-badge {
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-weight: 600;
+                    font-size: 10px;
+                }
+                
+                .stock-badge.success {
+                    background: #d1fae5;
+                    color: #065f46;
+                }
+                
+                .stock-badge.warning {
+                    background: #fef3c7;
+                    color: #92400e;
+                }
+                
+                .text-center {
+                    text-align: center;
+                }
+                
+                .low-stock {
+                    background: #fff3cd !important;
+                }
+                
+                @media print {
+                    body {
+                        padding: 0;
+                    }
+                    
+                    .table-container {
+                        page-break-inside: avoid;
+                    }
+                    
+                    .data-table {
+                        font-size: 10px;
+                    }
+                    
+                    .data-table th,
+                    .data-table td {
+                        padding: 6px 4px;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header-print">
+                <h1>${titulo}</h1>
+                <p>Fecha de generación: ${fecha}</p>
+                <p>Sistema de Inventario - La Merced</p>
+            </div>
+            ${contenido}
+        </body>
+        </html>
+    `);
     
-    // Restaurar elementos después de imprimir
+    ventanaImpresion.document.close();
+    
+    // Esperar a que se cargue el contenido y luego imprimir
     setTimeout(() => {
-        elementosOcultar.forEach(el => {
-            if (el) el.style.display = '';
-        });
-    }, 1000);
+        ventanaImpresion.focus();
+        ventanaImpresion.print();
+    }, 250);
 }
 </script>
-<style>
-@media print {
-    @page {
-        margin: 1cm;
-    }
-    
-    body {
-        visibility: hidden;
-    }
-
-    /* Muestra solo el reporte */
-    #reporte-imprimible,
-    #reporte-imprimible * {
-        visibility: visible !important;
-    }
-
-    #reporte-imprimible {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-    
-    .data-table {
-        font-size: 9px;
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    .data-table th,
-    .data-table td {
-        border: 1px solid #000;
-        padding: 5px;
-    }
-
-    .data-table thead {
-        background: #960f1c;
-        color: #fff;
-    }
-}
-</style>
 <?php closeConnection($conn); ?>

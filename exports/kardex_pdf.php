@@ -27,13 +27,29 @@ $movimientos = $conn->query("
     SELECT m.*, 
            p.codigo as producto_codigo,
            p.nombre as producto_nombre,
+           p.precio as precio_unitario,
+           (m.cantidad * p.precio) AS total_linea,
            u.nombre_completo as usuario_nombre
     FROM movimientos m
     INNER JOIN productos p ON m.producto_id = p.id
     LEFT JOIN usuarios u ON m.usuario_id = u.id
     $where_clause
-    ORDER BY m.fecha_movimiento DESC
+    ORDER BY m.fecha_movimiento DESC, m.referencia_tipo DESC, m.referencia_id DESC, m.id DESC
 ");
+
+// Calcular totales
+$total_cantidad_general = 0;
+$total_venta_general = 0;
+$movimientos_array = [];
+
+while ($mov = $movimientos->fetch_assoc()) {
+    $movimientos_array[] = $mov;
+    $total_cantidad_general += $mov['cantidad'];
+
+    if ($mov['tipo_movimiento'] == 'salida') {
+        $total_venta_general += $mov['total_linea'];
+    }
+}
 
 // Generar HTML para PDF
 ob_start();
@@ -97,26 +113,79 @@ ob_start();
                 <th>Producto</th>
                 <th>Tipo</th>
                 <th>Cantidad</th>
-                <th>Stock Antes</th>
-                <th>Stock Después</th>
+                <th>Precio Unit.</th>
+                <th>Total</th>
+                <th>Stock Actual</th>
                 <th>Usuario</th>
                 <th>Referencia</th>
             </tr>
         </thead>
         <tbody>
-            <?php while ($mov = $movimientos->fetch_assoc()): ?>
+            <?php 
+            $salida_anterior = null;
+            foreach ($movimientos_array as $index => $mov): 
+                $ref_key = $mov['referencia_tipo'] . '_' . $mov['referencia_id'];
+                $es_nueva_salida = ($mov['tipo_movimiento'] == 'salida' && $salida_anterior != null && $salida_anterior != $ref_key);
+                
+                // Mostrar total de la salida anterior antes de la nueva
+                if ($es_nueva_salida && isset($totales_por_salida[$salida_anterior])): ?>
+                    <tr style="background: #e9ecef; font-weight: bold;">
+                        <td colspan="4" style="text-align: right;">TOTAL <?php echo $totales_por_salida[$salida_anterior]['referencia']; ?>:</td>
+                        <td><strong><?php echo $totales_por_salida[$salida_anterior]['total_cantidad']; ?></strong></td>
+                        <td></td>
+                        <td><strong>Q<?php echo number_format($totales_por_salida[$salida_anterior]['total_venta'], 2); ?></strong></td>
+                        <td colspan="3"></td>
+                    </tr>
+                <?php endif; ?>
+                
                 <tr>
                     <td><?php echo date('d/m/Y H:i', strtotime($mov['fecha_movimiento'])); ?></td>
                     <td><?php echo htmlspecialchars($mov['producto_codigo']); ?></td>
                     <td><?php echo htmlspecialchars($mov['producto_nombre']); ?></td>
                     <td><?php echo strtoupper($mov['tipo_movimiento']); ?></td>
                     <td><?php echo $mov['cantidad']; ?></td>
-                    <td><?php echo $mov['stock_antes']; ?></td>
-                    <td><?php echo $mov['stock_despues']; ?></td>
+                    <td><?php echo $mov['tipo_movimiento'] == 'salida' ? 'Q' . number_format($mov['precio_unitario'], 2) : '-'; ?></td>
+                    <td><?php echo $mov['tipo_movimiento'] == 'salida' ? 'Q' . number_format($mov['total_linea'], 2) : '-'; ?></td>
+                    <td><strong><?php echo $mov['stock_despues']; ?></strong></td>
                     <td><?php echo htmlspecialchars($mov['usuario_nombre'] ?? 'N/A'); ?></td>
                     <td><?php echo strtoupper($mov['referencia_tipo']) . ' #' . $mov['referencia_id']; ?></td>
                 </tr>
-            <?php endwhile; ?>
+                
+                <?php 
+                // Verificar si es el último movimiento de esta salida
+                $es_ultimo = ($index == count($movimientos_array) - 1);
+                $es_siguiente_diferente = false;
+                
+                if (!$es_ultimo) {
+                    $siguiente = $movimientos_array[$index + 1];
+                    $siguiente_ref = $siguiente['referencia_tipo'] . '_' . $siguiente['referencia_id'];
+                    // Si el siguiente es diferente Y es una salida, o si el siguiente no es salida
+                    $es_siguiente_diferente = ($mov['tipo_movimiento'] == 'salida' && 
+                                               ($ref_key != $siguiente_ref || $siguiente['tipo_movimiento'] != 'salida'));
+                }
+                
+                // Mostrar total después del último producto de la salida
+                if ($mov['tipo_movimiento'] == 'salida' && isset($totales_por_salida[$ref_key]) && 
+                    ($es_ultimo || $es_siguiente_diferente)): ?>
+                    <tr style="background: #e9ecef; font-weight: bold;">
+                        <td colspan="4" style="text-align: right;">TOTAL <?php echo $totales_por_salida[$ref_key]['referencia']; ?>:</td>
+                        <td><strong><?php echo $totales_por_salida[$ref_key]['total_cantidad']; ?></strong></td>
+                        <td></td>
+                        <td><strong>Q<?php echo number_format($totales_por_salida[$ref_key]['total_venta'], 2); ?></strong></td>
+                        <td colspan="3"></td>
+                    </tr>
+                <?php endif;
+                
+                $salida_anterior = $ref_key;
+            endforeach; ?>
+            <!-- Totales generales -->
+            <tr style="background: #960f1c; color: white; font-weight: bold;">
+                <td colspan="4" style="text-align: right;"><strong>TOTAL GENERAL:</strong></td>
+                <td><strong><?php echo $total_cantidad_general; ?></strong></td>
+                <td></td>
+                <td><strong>Q<?php echo number_format($total_venta_general, 2); ?></strong></td>
+                <td colspan="3"></td>
+            </tr>
         </tbody>
     </table>
 </body>
