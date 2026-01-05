@@ -27,6 +27,19 @@
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 16px;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+}
+
 body {
     font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: #f1f5f9;
@@ -35,6 +48,11 @@ body {
     line-height: 1.6;
     font-size: 15px;
     display: flex;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    margin: 0;
+    padding: 0;
 }
 
 .logo_menu {
@@ -55,13 +73,15 @@ body {
     left: 0;
     top: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     box-shadow: var(--shadow-xl);
     z-index: 1000;
     transition: transform 0.3s ease;
+    max-width: 100vw;
 }
 
 .sidebar-header {
-    padding: 25px 20px;
+    padding: 15px 15px;
     background: var(--primary-dark);
     border-bottom: 2px solid rgba(255,255,255,0.1);
 }
@@ -137,13 +157,15 @@ body {
     display: block;
     color: white;
     text-decoration: none;
-    padding: 14px 25px;
+    padding: 12px 20px;
     transition: all 0.3s ease;
     border-left: 3px solid transparent;
     font-weight: 500;
     display: flex;
     align-items: center;
     gap: 12px;
+    font-size: 0.95em;
+    white-space: nowrap;
 }
 
 .sidebar-menu-item:hover {
@@ -170,6 +192,9 @@ body {
     margin-left: var(--sidebar-width);
     min-height: 100vh;
     transition: margin-left 0.3s ease;
+    width: calc(100% - var(--sidebar-width));
+    max-width: calc(100vw - var(--sidebar-width));
+    overflow-x: hidden;
 }
 
 .top-bar {
@@ -203,9 +228,11 @@ body {
 }
 
 .content-area {
-    padding: 30px;
+    padding: 20px;
     max-width: 1400px;
     margin: 0 auto;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 /* Container (para compatibilidad) */
@@ -365,7 +392,7 @@ body {
 
 .page-header h2 {
     color: var(--primary-color);
-    font-size: 1.8em;
+    font-size: 1.5em;
     font-weight: 700;
 }
 
@@ -707,8 +734,12 @@ footer {
 /* Responsive */
 /* Tablet */
 @media (max-width: 1024px) {
+    html {
+        font-size: 15px;
+    }
+    
     .content-area {
-        padding: 20px;
+        padding: 18px;
     }
     
     .stats-grid {
@@ -722,13 +753,31 @@ footer {
     .table-container {
         overflow-x: auto;
     }
+    
+    .wizard-container {
+        padding: 18px;
+    }
+    
+    .wizard-header h2 {
+        font-size: 1.4em;
+    }
+    
+    .search-box-container,
+    .selected-products-container {
+        padding: 18px;
+    }
 }
 
 /* Mobile */
 @media (max-width: 768px) {
+    html {
+        font-size: 14px;
+    }
+    
     .sidebar {
         transform: translateX(-100%);
-        width: 280px;
+        width: 260px;
+        max-width: 85vw;
     }
     
     .sidebar.open {
@@ -737,6 +786,8 @@ footer {
     
     .main-wrapper {
         margin-left: 0;
+        width: 100%;
+        max-width: 100vw;
     }
     
     .menu-toggle {
@@ -744,15 +795,15 @@ footer {
     }
     
     .top-bar {
-        padding: 12px 15px;
+        padding: 10px 12px;
     }
     
     .top-bar-title {
-        font-size: 1.2em;
+        font-size: 1.1em;
     }
     
     .content-area {
-        padding: 15px;
+        padding: 12px;
     }
     
     .stats-grid {
@@ -857,20 +908,24 @@ footer {
 
 /* Small Mobile */
 @media (max-width: 480px) {
+    html {
+        font-size: 13px;
+    }
+    
     .content-area {
         padding: 10px;
     }
     
     .top-bar {
-        padding: 10px 12px;
+        padding: 8px 10px;
     }
     
     .top-bar-title {
-        font-size: 1.1em;
+        font-size: 1em;
     }
     
     .form-container {
-        padding: 15px;
+        padding: 12px;
     }
     
     .table-container {
@@ -887,58 +942,60 @@ footer {
     }
     
     .stat-card {
-        padding: 15px;
+        padding: 12px;
         flex-direction: column;
         text-align: center;
     }
     
     .stat-icon {
-        font-size: 2em;
+        font-size: 1.8em;
     }
     
     .stat-info h3 {
-        font-size: 1.5em;
+        font-size: 1.3em;
     }
     
     .wizard-container {
-        padding: 20px 15px;
+        padding: 15px 12px;
     }
     
     .wizard-header h2 {
-        font-size: 1.5em;
+        font-size: 1.2em;
     }
     
     .wizard-steps {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
     }
     
     .wizard-step {
         width: 100%;
         justify-content: center;
+        padding: 8px 15px;
+        font-size: 0.9em;
     }
     
     .search-box-container {
-        padding: 20px 15px;
+        padding: 15px 12px;
     }
     
     .products-grid {
         grid-template-columns: 1fr;
-        gap: 15px;
+        gap: 12px;
     }
     
     .product-card {
-        padding: 15px;
+        padding: 12px;
     }
     
     .selected-products-container {
-        padding: 20px 15px;
+        padding: 15px 12px;
     }
     
     .selected-product-item {
         flex-direction: column;
         align-items: flex-start;
-        gap: 15px;
+        gap: 12px;
     }
     
     .selected-product-info {
@@ -946,20 +1003,22 @@ footer {
     }
     
     .form-actions-fixed {
-        padding: 15px;
+        padding: 12px;
         flex-direction: column;
     }
     
     .form-actions-fixed .btn {
         width: 100%;
+        padding: 12px;
+        font-size: 14px;
     }
     
     .summary-panel {
-        padding: 20px;
+        padding: 15px;
     }
     
     .summary-value {
-        font-size: 36px;
+        font-size: 2em;
     }
 }
 

@@ -8,7 +8,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?php echo $page_title ?? 'Sistema de Inventario - La Merced'; ?></title>
     <?php 
     // Detectar si estamos en una subcarpeta (imports, exports, etc.)

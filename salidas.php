@@ -106,21 +106,21 @@ require_once 'includes/header.php';
 /* Estilos mejorados para una interfaz más intuitiva */
 .wizard-container {
     background: linear-gradient(135deg, #960f1c 0%, #960f1c 100%);
-    padding: 30px;
-    border-radius: 15px;
-    margin-bottom: 30px;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
 .wizard-header {
     text-align: center;
     color: white;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .wizard-header h2 {
-    font-size: 2em;
-    margin-bottom: 10px;
+    font-size: 1.5em;
+    margin-bottom: 8px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
 }
 
@@ -168,10 +168,10 @@ require_once 'includes/header.php';
 
 .search-box-container {
     background: white;
-    padding: 30px;
-    border-radius: 15px;
+    padding: 20px;
+    border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .search-input-group {
@@ -244,8 +244,8 @@ require_once 'includes/header.php';
 .product-card {
     background: white;
     border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 10px;
+    padding: 15px;
     transition: all 0.3s;
     cursor: pointer;
     position: relative;
@@ -351,10 +351,10 @@ require_once 'includes/header.php';
 
 .selected-products-container {
     background: white;
-    padding: 30px;
-    border-radius: 15px;
+    padding: 20px;
+    border-radius: 12px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     display: none;
 }
 
@@ -449,17 +449,17 @@ require_once 'includes/header.php';
 
 .summary-panel {
     background: linear-gradient(135deg, #960f1c 0%, #960f1c 100%);
-    padding: 25px;
-    border-radius: 15px;
+    padding: 20px;
+    border-radius: 12px;
     color: white;
     text-align: center;
     margin-bottom: 20px;
 }
 
 .summary-value {
-    font-size: 48px;
+    font-size: 2.5em;
     font-weight: 700;
-    margin: 10px 0;
+    margin: 8px 0;
 }
 
 .form-actions-fixed {
@@ -479,10 +479,10 @@ require_once 'includes/header.php';
     background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
     color: white;
     border: none;
-    padding: 18px 50px;
-    font-size: 18px;
+    padding: 14px 35px;
+    font-size: 16px;
     font-weight: 600;
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.3s;
     box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
