@@ -34,15 +34,15 @@ $where_clause = !empty($where) ? "WHERE " . implode(" AND ", $where) : "";
 
 // Obtener movimientos
 $sql = "
-    SELECT m.id,
-        m.fecha_movimiento,
+    SELECT m.fecha_movimiento,
         p.codigo as producto_codigo,
         p.nombre as producto_nombre,
         m.tipo_movimiento,
         m.cantidad,
         p.precio as precio_unitario,
-        (m.cantidad * p.precio) AS total_linea,
-        m.stock_despues as stock_actual,
+        SUM(m.cantidad * p.precio) AS total_venta,
+        m.stock_antes,
+        m.stock_despues,
         u.nombre_completo as usuario_nombre,
         m.referencia_id,
         m.referencia_tipo,
@@ -51,7 +51,11 @@ $sql = "
     INNER JOIN productos p ON p.id = m.producto_id
     LEFT JOIN usuarios u ON u.id = m.usuario_id
     $where_clause
-    ORDER BY m.fecha_movimiento DESC, m.referencia_tipo DESC, m.referencia_id DESC, m.id DESC
+    GROUP BY m.fecha_movimiento, p.nombre, m.tipo_movimiento,
+    m.cantidad, p.precio, m.stock_antes, m.stock_despues, 
+    u.nombre_completo, m.referencia_id, m.referencia_tipo,
+    m.observaciones
+    ORDER BY m.fecha_movimiento DESC
     LIMIT 500;
 ";
 
@@ -62,33 +66,6 @@ if (!empty($params)) {
 }
 $stmt->execute();
 $movimientos = $stmt->get_result();
-
-// Calcular totales por salida y totales generales
-$total_cantidad_general = 0;
-$total_venta_general = 0;
-$totales_por_salida = [];
-$movimientos_array = [];
-
-while ($mov = $movimientos->fetch_assoc()) {
-    $movimientos_array[] = $mov;
-    $total_cantidad_general += $mov['cantidad'];
-    
-    // Solo calcular totales para salidas
-    if ($mov['tipo_movimiento'] == 'salida') {
-        $total_venta_general += $mov['total_linea'];
-        
-        $ref_key = $mov['referencia_tipo'] . '_' . $mov['referencia_id'];
-        if (!isset($totales_por_salida[$ref_key])) {
-            $totales_por_salida[$ref_key] = [
-                'referencia' => strtoupper($mov['referencia_tipo']) . ' #' . $mov['referencia_id'],
-                'total_cantidad' => 0,
-                'total_venta' => 0
-            ];
-        }
-        $totales_por_salida[$ref_key]['total_cantidad'] += $mov['cantidad'];
-        $totales_por_salida[$ref_key]['total_venta'] += $mov['total_linea'];
-    }
-}
 
 // Obtener productos para el filtro
 $productos = $conn->query("SELECT id, codigo, nombre FROM productos WHERE estado = 'activo' ORDER BY nombre");
@@ -157,42 +134,42 @@ require_once 'includes/header.php';
             </div>
 
             <!-- Tabla de movimientos -->
-            <div class="table-container" id="kardex-imprimible">
+            <div class="table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Fecha/Hora</th>
-                            <th>Código</th>
                             <th>Producto</th>
                             <th>Tipo</th>
                             <th>Cantidad</th>
-                            <th>Precio Unit.</th>
+                            <th>Precio Unitario</th>
                             <th>Total</th>
-                            <th>Stock Actual</th>
+                            <th>Stock Antes</th>
+                            <th>Stock Después</th>
                             <th>Usuario</th>
                             <th>Referencia</th>
+                            <th>Observaciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!empty($movimientos_array)): ?>
-                            <?php 
-                            $salida_anterior = null;
-                            foreach ($movimientos_array as $index => $mov): 
-                                $ref_key = $mov['referencia_tipo'] . '_' . $mov['referencia_id'];
-                            ?>
+                        <?php if ($movimientos->num_rows > 0): ?>
+                            <?php while ($mov = $movimientos->fetch_assoc()): ?>
                                 <tr>
-                                    <td><?php echo date('d/m/Y H:i', strtotime($mov['fecha_movimiento'])); ?></td>
-                                    <td><strong><?php echo htmlspecialchars($mov['producto_codigo']); ?></strong></td>
-                                    <td><?php echo htmlspecialchars($mov['producto_nombre']); ?></td>
+                                    <td><?php echo date('d/m/Y H:i:s', strtotime($mov['fecha_movimiento'])); ?></td>
+                                    <td>
+                                        <strong><?php echo htmlspecialchars($mov['producto_codigo']); ?></strong><br>
+                                        <small><?php echo htmlspecialchars($mov['producto_nombre']); ?></small>
+                                    </td>
                                     <td>
                                         <span class="stock-badge <?php echo $mov['tipo_movimiento'] == 'entrada' ? 'success' : 'warning'; ?>">
                                             <?php echo strtoupper($mov['tipo_movimiento']); ?>
                                         </span>
                                     </td>
                                     <td><?php echo $mov['cantidad']; ?></td>
-                                    <td><?php echo $mov['tipo_movimiento'] == 'salida' ? 'Q' . number_format($mov['precio_unitario'], 2) : '-'; ?></td>
-                                    <td><?php echo $mov['tipo_movimiento'] == 'salida' ? 'Q' . number_format($mov['total_linea'], 2) : '-'; ?></td>
-                                    <td><strong><?php echo $mov['stock_actual']; ?></strong></td>
+                                    <td><?php echo $mov['precio_unitario']; ?></td>
+                                    <td><?php echo $mov['total_venta']; ?></td>
+                                    <td><?php echo $mov['stock_antes']; ?></td>
+                                    <td><strong><?php echo $mov['stock_despues']; ?></strong></td>
                                     <td><?php echo htmlspecialchars($mov['usuario_nombre'] ?? 'N/A'); ?></td>
                                     <td>
                                         <?php 
@@ -200,196 +177,17 @@ require_once 'includes/header.php';
                                         echo $ref . ' #' . $mov['referencia_id'];
                                         ?>
                                     </td>
+                                    <td><?php echo htmlspecialchars($mov['observaciones'] ?? ''); ?></td>
                                 </tr>
-                                
-                                <?php 
-                                // Verificar si es el último movimiento de esta salida para mostrar el total
-                                $es_ultimo = ($index == count($movimientos_array) - 1);
-                                $es_siguiente_diferente = false;
-                                
-                                if (!$es_ultimo) {
-                                    $siguiente = $movimientos_array[$index + 1];
-                                    $siguiente_ref = $siguiente['referencia_tipo'] . '_' . $siguiente['referencia_id'];
-                                    // Si el siguiente movimiento es de una salida diferente o no es salida
-                                    $es_siguiente_diferente = ($mov['tipo_movimiento'] == 'salida' && 
-                                                               ($ref_key != $siguiente_ref || $siguiente['tipo_movimiento'] != 'salida'));
-                                }
-                                
-                                // Mostrar total después del último producto de la salida
-                                if ($mov['tipo_movimiento'] == 'salida' && isset($totales_por_salida[$ref_key]) && 
-                                    ($es_ultimo || $es_siguiente_diferente)): ?>
-                                    <tr style="background: #f0f0f0; font-weight: bold;">
-                                        <td colspan="4" class="text-right">TOTAL <?php echo $totales_por_salida[$ref_key]['referencia']; ?>:</td>
-                                        <td><strong><?php echo $totales_por_salida[$ref_key]['total_cantidad']; ?></strong></td>
-                                        <td></td>
-                                        <td><strong>Q<?php echo number_format($totales_por_salida[$ref_key]['total_venta'], 2); ?></strong></td>
-                                        <td colspan="3"></td>
-                                    </tr>
-                                <?php endif;
-                                
-                                $salida_anterior = $ref_key;
-                            endforeach; ?>
-                            <!-- Totales generales -->
-                            <tr style="background: #960f1c; color: white; font-weight: bold; font-size: 1.1em;">
-                                <td colspan="4" class="text-right"><strong>TOTAL GENERAL:</strong></td>
-                                <td><strong><?php echo $total_cantidad_general; ?></strong></td>
-                                <td></td>
-                                <td><strong>Q<?php echo number_format($total_venta_general, 2); ?></strong></td>
-                                <td colspan="3"></td>
-                            </tr>
+                            <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="10" class="text-center">No hay movimientos en el período seleccionado</td>
+                                <td colspan="9" class="text-center">No hay movimientos en el período seleccionado</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Botón de impresión -->
-            <div class="form-actions">
-                <button onclick="imprimirKardex()" class="btn btn-primary">🖨️ Imprimir / Guardar como PDF</button>
-            </div>
 <?php require_once 'includes/footer.php'; ?>
-<script>
-function imprimirKardex() {
-    const contenido = document.getElementById('kardex-imprimible').innerHTML;
-    const fecha_desde = '<?php echo date('d/m/Y', strtotime($fecha_desde)); ?>';
-    const fecha_hasta = '<?php echo date('d/m/Y', strtotime($fecha_hasta)); ?>';
-    const fecha_export = new Date().toLocaleString('es-GT');
-    
-    const ventanaImpresion = window.open('', '_blank');
-    ventanaImpresion.document.write(`
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <title>Kardex - La Merced</title>
-            <style>
-                @page {
-                    margin: 1.5cm;
-                    size: A4 landscape;
-                }
-                
-                body {
-                    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    font-size: 10px;
-                    color: #333;
-                    margin: 0;
-                    padding: 20px;
-                }
-                
-                .header-print {
-                    text-align: center;
-                    margin-bottom: 20px;
-                    border-bottom: 2px solid #960f1c;
-                    padding-bottom: 15px;
-                }
-                
-                .header-print h1 {
-                    color: #960f1c;
-                    margin: 0 0 10px 0;
-                    font-size: 20px;
-                }
-                
-                .header-print p {
-                    margin: 5px 0;
-                    color: #666;
-                    font-size: 12px;
-                }
-                
-                .data-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 10px;
-                    font-size: 9px;
-                }
-                
-                .data-table th {
-                    background: #960f1c;
-                    color: white;
-                    padding: 8px 6px;
-                    text-align: left;
-                    font-weight: 600;
-                    border: 1px solid #7a0c16;
-                }
-                
-                .data-table td {
-                    padding: 6px;
-                    border: 1px solid #ddd;
-                    border-top: none;
-                }
-                
-                .data-table tbody tr:nth-child(even) {
-                    background: #f8f9fa;
-                }
-                
-                .data-table tbody tr[style*="background: #f0f0f0"] {
-                    background: #e9ecef !important;
-                    font-weight: bold;
-                }
-                
-                .data-table tbody tr[style*="background: #960f1c"] {
-                    background: #960f1c !important;
-                    color: white !important;
-                }
-                
-                .text-right {
-                    text-align: right;
-                }
-                
-                .stock-badge {
-                    padding: 3px 6px;
-                    border-radius: 3px;
-                    font-weight: 600;
-                    font-size: 8px;
-                }
-                
-                .stock-badge.success {
-                    background: #d1fae5;
-                    color: #065f46;
-                }
-                
-                .stock-badge.warning {
-                    background: #fef3c7;
-                    color: #92400e;
-                }
-                
-                @media print {
-                    body {
-                        padding: 0;
-                    }
-                    
-                    .data-table {
-                        font-size: 8px;
-                    }
-                    
-                    .data-table th,
-                    .data-table td {
-                        padding: 4px 3px;
-                    }
-                }
-            </style>
-        </head>
-        <body>
-            <div class="header-print">
-                <h1>📋 Kardex / Movimientos de Inventario</h1>
-                <p><strong>La Merced - Sistema de Inventario</strong></p>
-                <p>Período: ${fecha_desde} - ${fecha_hasta}</p>
-                <p>Fecha de exportación: ${fecha_export}</p>
-            </div>
-            ${contenido}
-        </body>
-        </html>
-    `);
-    
-    ventanaImpresion.document.close();
-    
-    setTimeout(() => {
-        ventanaImpresion.focus();
-        ventanaImpresion.print();
-    }, 250);
-}
-</script>
 <?php closeConnection($conn); ?>
 
